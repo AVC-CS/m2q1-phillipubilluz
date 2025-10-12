@@ -1,0 +1,58 @@
+name: GitHub Classroom Workflow
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  repository_dispatch:
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # THIS IS THE STEP YOU ASKED TO ADD
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      
+      # Syntax check sanity test
+      - id: syntax
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Syntax check main.py
+          setup-command: python -m pip install --upgrade pip
+          command: python main.py 
+#          command: python main.py < data.txt
+          timeout: 5
+          max-score: 5
+
+      - id: basic
+        uses: classroom-resources/autograding-python-grader@v1
+        with:
+          test-name: basic tests 
+          setup-command: python -m pip install --upgrade pip && pip install pytest
+          entryPoint: pytest  
+          args: -rP 
+          timeout: 5
+          max-score: 40
+
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          SYNTAX_RESULTS: ${{ steps.syntax.outputs.result }}
+          BASIC_RESULTS:       ${{ steps.basic.outputs.result }}
+          # EDGE_RESULTS:        ${{ steps.edge.outputs.result }}
+          # BONUS_RESULTS:       ${{ steps.bonus.outputs.result }}
+        with:
+          # runners: interpreter,basic,edge,bonus
+          runners: syntax, basic
