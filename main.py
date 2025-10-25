@@ -11,7 +11,11 @@ def getPivot(number):
     return pivot
 
 
-# def split(number):
+def split(number):
+    pivot = getPivot(number)
+    left = [x for x in number if x <= pivot]
+    right = [x for x in number if x > pivot]
+    return left + right
 
 
 
